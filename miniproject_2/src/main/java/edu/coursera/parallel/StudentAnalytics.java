@@ -1,10 +1,9 @@
 package edu.coursera.parallel;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toMap;
 
 /**
  * A simple wrapper class for various analytics methods.
@@ -46,7 +45,12 @@ public final class StudentAnalytics {
      */
     public double averageAgeOfEnrolledStudentsParallelStream(
             final Student[] studentArray) {
-        throw new UnsupportedOperationException();
+        return Stream.of(studentArray)
+                .parallel()
+                .filter(Student::checkIsCurrent)
+                .mapToDouble(Student::getAge)
+                .average()
+                .orElse(0.0);
     }
 
     /**
@@ -100,7 +104,15 @@ public final class StudentAnalytics {
      */
     public String mostCommonFirstNameOfInactiveStudentsParallelStream(
             final Student[] studentArray) {
-        throw new UnsupportedOperationException();
+
+        return Stream.of(studentArray).parallel()
+                .filter(s -> !s.checkIsCurrent())
+                .collect(
+                    toMap(Student::getFirstName, s -> 1, (a, b) -> a + b)
+                )
+                .entrySet().parallelStream()
+                .max(Comparator.comparingInt(Map.Entry::getValue))
+                .get().getKey();
     }
 
     /**
@@ -136,6 +148,9 @@ public final class StudentAnalytics {
      */
     public int countNumberOfFailedStudentsOlderThan20ParallelStream(
             final Student[] studentArray) {
-        throw new UnsupportedOperationException();
+
+        return (int) Stream.of(studentArray).parallel()
+                .filter(s -> !s.checkIsCurrent() && s.getAge() > 20 && s.getGrade() < 65)
+                .count();
     }
 }
